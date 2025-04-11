@@ -112,6 +112,20 @@ int main() {
 }
 ```
 
+### Variadic Functions
+
+```c
+// hello_printf.c
+int printf(char *format, ...);
+
+int main() {
+    printf("Hello, %s! The answer is %d.\n", "World", 42);
+    return 0;
+}
+```
+
+More examples can be found in the `tests/` directory.
+
 ## Implementation Details
 
 TinyCC-RS follows a traditional compiler architecture:
