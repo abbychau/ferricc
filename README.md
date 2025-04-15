@@ -1,6 +1,8 @@
-# TinyCC-RS: A Tiny C Compiler Written in Rust
+# FerriCC: A C Compiler Written in Rust
 
-TinyCC-RS is a small, educational C compiler implemented in Rust. It's inspired by projects like tcc (Tiny C Compiler) and chibicc, aiming to provide a simple yet functional C compiler that's easy to understand and extend.
+FerriCC is a small, educational C compiler implemented in Rust. It's inspired by projects like tcc (Tiny C Compiler) and chibicc, aiming to provide a simple yet functional C compiler that's easy to understand and extend.
+
+![Logo](./logo.png)
 
 ## Features
 
@@ -19,7 +21,7 @@ TinyCC-RS is a small, educational C compiler implemented in Rust. It's inspired 
 ## Project Structure
 
 ```
-tinycc-rs/
+ferricc/
 ├── src/                  # Source code
 │   ├── ast.rs            # Abstract Syntax Tree definitions
 │   ├── codegen.rs        # Assembly code generation
@@ -52,8 +54,8 @@ tinycc-rs/
 
 ```bash
 # Clone the repository
-git clone https://github.com/abbychau/tinycc-rs.git
-cd tinycc-rs
+git clone https://github.com/abbychau/ferricc.git
+cd ferricc
 
 # Build the project
 cargo build --release
@@ -128,7 +130,7 @@ More examples can be found in the `tests/` directory.
 
 ## Implementation Details
 
-TinyCC-RS follows a traditional compiler architecture:
+FerriCC follows a traditional compiler architecture:
 
 1. **Lexical Analysis**: Converts source code into tokens
 2. **Preprocessing**: Handles include directives and macros
@@ -213,3 +215,13 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Inspired by [tcc](https://bellard.org/tcc/) by Fabrice Bellard
 - Influenced by [chibicc](https://github.com/rui314/chibicc) by Rui Ueyama
 - Built with Rust and its amazing ecosystem
+
+
+
+## Name Origin
+This name reflects both the Rust heritage of the project and its purpose as a C compiler, while the "ferric" element suggests a robust and solid implementation.
+
+The name "FerriCC" is a playful combination of:
+- **Ferris**: The unofficial mascot of Rust, a cute crab
+- **Ferric**: Relating to or containing iron (Fe), symbolizing strength and reliability
+- **CC**: The common abbreviation for C Compiler

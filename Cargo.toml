@@ -1,8 +1,8 @@
 [package]
-name = "tinycc-rs"
+name = "ferricc"
 version = "0.1.0"
 edition = "2021"
-description = "A tiny C compiler written in Rust"
+description = "A Rust-based C compiler named after Ferris the crab"
 authors = ["abbychau"]
 
 [dependencies]
