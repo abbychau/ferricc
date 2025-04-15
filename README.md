@@ -139,6 +139,54 @@ TinyCC-RS follows a traditional compiler architecture:
 
 The compiler targets the Windows x64 calling convention, with detailed comments in the generated assembly code to explain the low-level implementation.
 
+### Compiler Data Flow
+
+```mermaid
+graph TD
+    A[C Source Code] --> B[Lexer]
+    B --> C[Tokens]
+    C --> D[Preprocessor]
+    D --> E[Processed Tokens]
+    E --> F[Parser]
+    F --> G[Abstract Syntax Tree]
+    G --> H[Type Checker]
+    H --> I[Validated AST]
+    I --> J[Code Generator]
+    J --> K[x86-64 Assembly]
+    K --> L[GCC Assembler & Linker]
+    L --> M[Executable]
+
+    subgraph "Lexical Analysis"
+        B
+    end
+
+    subgraph "Preprocessing"
+        D
+    end
+
+    subgraph "Syntax Analysis"
+        F
+    end
+
+    subgraph "Semantic Analysis"
+        H
+    end
+
+    subgraph "Code Generation"
+        J
+    end
+
+    subgraph "Assembly & Linking"
+        L
+    end
+
+    classDef process fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef data fill:#bbf,stroke:#333,stroke-width:1px;
+
+    class A,C,E,G,I,K,M data;
+    class B,D,F,H,J,L process;
+```
+
 ## Limitations
 
 - Limited subset of C (no structs, unions, or complex types yet)
