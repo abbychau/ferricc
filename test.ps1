@@ -12,6 +12,21 @@ if (-not (Test-Path $TestFile)) {
     exit 1
 }
 
+# Define output paths
+$ExePath = "output/bin/$TestName.exe"
+$AsmPath = "output/asm/$TestName.s"
+
+# Remove existing output files to prevent permission issues
+if (Test-Path $ExePath) {
+    Write-Host "Removing existing executable: $ExePath" -ForegroundColor Yellow
+    Remove-Item $ExePath -Force
+}
+
+if (Test-Path $AsmPath) {
+    Write-Host "Removing existing assembly: $AsmPath" -ForegroundColor Yellow
+    Remove-Item $AsmPath -Force
+}
+
 # Display the test file content
 Write-Host "=======================================" -ForegroundColor Blue
 Write-Host "Test file: $TestFile" -ForegroundColor Blue
@@ -29,7 +44,6 @@ Write-Host "Compiling $TestFile..." -ForegroundColor Cyan
 cargo run -- $TestFile
 
 # Check if compilation was successful
-$ExePath = "output/bin/$TestName.exe"
 if (-not (Test-Path $ExePath)) {
     Write-Error "Compilation failed: $ExePath not found"
     exit 1
@@ -39,7 +53,6 @@ if (-not (Test-Path $ExePath)) {
 Write-Host "=======================================" -ForegroundColor Blue
 Write-Host "Generated assembly:" -ForegroundColor Blue
 Write-Host "=======================================" -ForegroundColor Blue
-$AsmPath = "output/asm/$TestName.s"
 Get-Content $AsmPath | ForEach-Object { Write-Host $_ }
 Write-Host "=======================================" -ForegroundColor Blue
 Write-Host ""

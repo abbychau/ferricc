@@ -1,3 +1,47 @@
+# Function to clean up output directories
+function Clear-OutputDirectories {
+    param (
+        [string]$TestName = $null
+    )
+
+    if ($TestName) {
+        # Clean specific test files
+        $ExePath = "output/bin/$TestName.exe"
+        $AsmPath = "output/asm/$TestName.s"
+
+        if (Test-Path $ExePath) {
+            Write-Host "Removing existing executable: $ExePath" -ForegroundColor Yellow
+            Remove-Item $ExePath -Force
+        }
+
+        if (Test-Path $AsmPath) {
+            Write-Host "Removing existing assembly: $AsmPath" -ForegroundColor Yellow
+            Remove-Item $AsmPath -Force
+        }
+    } else {
+        # Clean entire directories
+        Write-Host "Cleaning output directories..." -ForegroundColor Yellow
+
+        # Check if directories exist before attempting to clean
+        if (Test-Path "output/bin") {
+            Get-ChildItem -Path "output/bin" -Filter "*.exe" | ForEach-Object {
+                Write-Host "Removing $($_.FullName)" -ForegroundColor Yellow
+                Remove-Item $_.FullName -Force
+            }
+        }
+
+        if (Test-Path "output/asm") {
+            Get-ChildItem -Path "output/asm" -Filter "*.s" | ForEach-Object {
+                Write-Host "Removing $($_.FullName)" -ForegroundColor Yellow
+                Remove-Item $_.FullName -Force
+            }
+        }
+    }
+}
+
+# Clean output directories before running tests
+Clear-OutputDirectories
+
 # List of test files (without the .c extension)
 $TestFiles = @(
     "simple",
@@ -19,6 +63,9 @@ foreach ($Test in $TestFiles) {
     Write-Host "=======================================" -ForegroundColor Blue
     Write-Host "Testing: $Test" -ForegroundColor Blue
     Write-Host "=======================================" -ForegroundColor Blue
+
+    # Clean up any existing output files for this test
+    Clear-OutputDirectories -TestName $Test
 
     # Run the test
     $StartTime = Get-Date

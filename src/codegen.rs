@@ -289,8 +289,12 @@ impl CodeGenerator {
                             // rbp is the base pointer, and var.offset is the variable's position on the stack
                             writeln!(self.output, "    mov rax, [rbp-{}]", var.offset).unwrap();
                         }
-                        Type::Pointer(_) | Type::Array(_, _) => {
-                            // For pointers and arrays, load the address into RAX
+                        Type::Pointer(_) => {
+                            // For pointers, load the value of the pointer (which is an address)
+                            writeln!(self.output, "    mov rax, [rbp-{}]", var.offset).unwrap();
+                        }
+                        Type::Array(_, _) => {
+                            // For arrays, load the address of the array
                             // lea (Load Effective Address) calculates the address without dereferencing
                             writeln!(self.output, "    lea rax, [rbp-{}]", var.offset).unwrap();
                         }
@@ -318,22 +322,39 @@ impl CodeGenerator {
                 match op {
                     BinaryOp::Assign => {
                         // Assignment operator requires special handling
-                        if let Node::Identifier(name, _) = &**left {
-                            // First, evaluate the right-hand side expression
-                            // This will put the result in RAX
-                            self.generate_node(right)?;
+                        match &**left {
+                            Node::Identifier(name, _) => {
+                                // First, evaluate the right-hand side expression
+                                // This will put the result in RAX
+                                self.generate_node(right)?;
 
-                            // Then store the value from RAX into the variable's memory location
-                            if let Some(var) = self.variables.get(name) {
-                                // For local variables, store at [rbp-offset]
-                                // This writes the 64-bit RAX value to the stack location of the variable
-                                writeln!(self.output, "    mov [rbp-{}], rax", var.offset).unwrap();
-                            } else {
-                                // For global variables, store at the global label
-                                writeln!(self.output, "    mov [{}], rax", name).unwrap();
+                                // Then store the value from RAX into the variable's memory location
+                                if let Some(var) = self.variables.get(name) {
+                                    // For local variables, store at [rbp-offset]
+                                    // This writes the 64-bit RAX value to the stack location of the variable
+                                    writeln!(self.output, "    mov [rbp-{}], rax", var.offset).unwrap();
+                                } else {
+                                    // For global variables, store at the global label
+                                    writeln!(self.output, "    mov [{}], rax", name).unwrap();
+                                }
+                            },
+                            Node::UnaryExpr { op: UnaryOp::Dereference, expr, .. } => {
+                                // For pointer dereference (*p = value), we need to:
+                                // 1. Evaluate the right-hand side and save it
+                                self.generate_node(right)?;
+                                writeln!(self.output, "    push rax").unwrap();  // Save the value to assign
+
+                                // 2. Evaluate the pointer expression to get the address
+                                self.generate_node(expr)?;
+                                // Now RAX contains the address to store to
+
+                                // 3. Pop the value and store it at the address
+                                writeln!(self.output, "    pop rcx").unwrap();  // Get the value to assign
+                                writeln!(self.output, "    mov [rax], rcx").unwrap();  // Store the value at the address
+                            },
+                            _ => {
+                                return Err(codegen_error("Left operand of assignment must be an identifier or dereferenced pointer"));
                             }
-                        } else {
-                            return Err(codegen_error("Left operand of assignment must be an identifier"));
                         }
                     }
                     _ => {
@@ -502,7 +523,28 @@ impl CodeGenerator {
                 expr,
                 location: _,
             } => {
-                // First, evaluate the expression to get its value in RAX
+                // Special case for address-of operator
+                if let UnaryOp::AddressOf = op {
+                    // Address-of operator: RAX = &expr
+                    // Special case: we need the address, not the value
+                    if let Node::Identifier(name, _) = &**expr {
+                        if let Some(var) = self.variables.get(name) {
+                            // For local variables, calculate address relative to RBP
+                            // lea (Load Effective Address) calculates the address without dereferencing
+                            // We don't need to load the value first, just the address
+                            writeln!(self.output, "    lea rax, [rbp-{}]", var.offset).unwrap();
+
+                        } else {
+                            // For global variables, get the address of the global label
+                            writeln!(self.output, "    lea rax, [{}]", name).unwrap();
+                        }
+                    } else {
+                        return Err(codegen_error("Cannot take address of non-lvalue"));
+                    }
+                    return Ok(());
+                }
+
+                // For other unary operators, first evaluate the expression to get its value in RAX
                 self.generate_node(expr)?;
 
                 match op {
@@ -524,23 +566,12 @@ impl CodeGenerator {
                     UnaryOp::Dereference => {
                         // Dereference: RAX = *RAX (load value from address in RAX)
                         // Treats RAX as a pointer and loads the value it points to
+                        // For pointers to integers, we need to load the value at the address
                         writeln!(self.output, "    mov rax, [rax]").unwrap();
                     }
                     UnaryOp::AddressOf => {
-                        // Address-of operator: RAX = &expr
-                        // Special case: we need the address, not the value
-                        if let Node::Identifier(name, _) = &**expr {
-                            if let Some(var) = self.variables.get(name) {
-                                // For local variables, calculate address relative to RBP
-                                // lea (Load Effective Address) calculates the address without dereferencing
-                                writeln!(self.output, "    lea rax, [rbp-{}]", var.offset).unwrap();
-                            } else {
-                                // For global variables, get the address of the global label
-                                writeln!(self.output, "    lea rax, [{}]", name).unwrap();
-                            }
-                        } else {
-                            return Err(codegen_error("Cannot take address of non-lvalue"));
-                        }
+                        // This case is handled separately above
+                        unreachable!("AddressOf should be handled before match");
                     }
                 }
 
@@ -797,7 +828,9 @@ impl CodeGenerator {
                 if let Some(init) = initializer {
                     // Evaluate the initializer expression (result in RAX)
                     self.generate_node(init)?;
+
                     // Store the value from RAX into the variable's stack location
+                    // For pointers, we need to store the address
                     writeln!(self.output, "    mov [rbp-{}], rax", self.stack_offset).unwrap();
                 }
 

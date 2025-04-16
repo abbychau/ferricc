@@ -12,6 +12,21 @@ if (-not (Test-Path $TestFile)) {
     exit 1
 }
 
+# Define output paths
+$ExePath = "output/bin/$TestName.exe"
+$AsmPath = "output/asm/$TestName.s"
+
+# Remove existing output files to prevent permission issues
+if (Test-Path $ExePath) {
+    Write-Host "Removing existing executable: $ExePath" -ForegroundColor Yellow
+    Remove-Item $ExePath -Force
+}
+
+if (Test-Path $AsmPath) {
+    Write-Host "Removing existing assembly: $AsmPath" -ForegroundColor Yellow
+    Remove-Item $AsmPath -Force
+}
+
 # Build the compiler if needed
 Write-Host "Building the compiler..." -ForegroundColor Cyan
 cargo build
@@ -21,7 +36,6 @@ Write-Host "Compiling $TestFile..." -ForegroundColor Cyan
 cargo run -- $TestFile
 
 # Check if compilation was successful
-$ExePath = "output/bin/$TestName.exe"
 if (-not (Test-Path $ExePath)) {
     Write-Error "Compilation failed: $ExePath not found"
     exit 1
