@@ -114,6 +114,26 @@ int main() {
 }
 ```
 
+### Pointers
+
+```c
+// pointer_complex.c
+int main() {
+    int x = 42;
+    int y = 100;
+    int *p = &x;  // p points to x
+    int *q = &y;  // q points to y
+
+    // Pointer assignment
+    p = q;        // p now points to y
+
+    // Pointer dereference
+    *p = 200;     // y is now 200
+
+    return *p + *q;  // 200 + 200 = 400
+}
+```
+
 ### Variadic Functions
 
 ```c
@@ -195,6 +215,7 @@ graph TD
 - Basic error reporting
 - No optimizations
 - Windows-focused (x86-64 assembly)
+- For-loop is buggy (while loop works fine)
 
 ## Contributing
 
